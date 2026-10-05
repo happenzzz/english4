@@ -475,6 +475,34 @@
   .chrome-gate-help { margin-top: 16px; padding: 12px 14px; border-radius: 14px; background: #fff4e5; text-align: left; font-size: 14px; line-height: 1.6; color: #7a4300; }
   .chrome-gate-help ol { margin: 6px 0 10px; padding-left: 20px; }
   .chrome-gate-stay { margin-top: 14px; min-height: 40px; background: transparent; color: #64748b; font-size: 14px; font-weight: 600; text-decoration: underline; }
+  /* v5.7: self-assessment after each reading */
+  .feedback-dialog, .all-done-dialog { overflow: auto; }
+  .feedback-dialog.with-self .feedback-art { width: min(150px, 40vw); height: 150px; }
+  .feedback-dialog.with-self .feedback-title { margin: 2px 0 4px; font-size: clamp(32px, 6vw, 42px); }
+  .feedback-dialog.with-self .feedback-description { margin: 4px 0 12px; font-size: 15px; }
+  .self-check { margin: 0 0 14px; padding: 14px; border-radius: 20px; background: white; border: 2px solid #e2e8f0; text-align: left; }
+  .self-check-title { margin: 0 0 10px; text-align: center; font-size: 19px; font-weight: 900; color: #1e3a5f; line-height: 1.3; }
+  .self-check-title small { display: block; margin-top: 2px; font-size: 14px; font-weight: 700; color: #64748b; }
+  .self-opt { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 8px; padding: 10px 14px; min-height: 62px; border: 3px solid #e2e8f0; border-radius: 16px; background: #f8fafc; color: #1e293b; text-align: left; transition: transform .12s ease, border-color .12s ease, background .12s ease; }
+  .self-opt:last-child { margin-bottom: 0; }
+  .self-opt:hover { border-color: #93c5fd; }
+  .self-opt:active { transform: scale(.98); }
+  .self-face { flex: 0 0 auto; font-size: 34px; line-height: 1; }
+  .self-text { display: flex; flex-direction: column; font-size: 17px; font-weight: 800; line-height: 1.3; }
+  .self-text small { font-size: 13px; font-weight: 600; color: #64748b; }
+  .self-opt.chosen { border-color: #2563eb; background: #eaf1ff; box-shadow: 0 0 0 4px #bfd3ff; }
+  .self-opt.chosen .self-face { animation: word-pop .42s cubic-bezier(.2,.8,.35,1.25) both; }
+  .self-check.dim .self-opt:not(.chosen) { opacity: .55; }
+  .feedback-dialog[data-kind] .feedback-next:disabled { background: #94a3b8; border-color: #64748b; opacity: 1; cursor: default; }
+  .self-summary { margin: 0 0 16px; padding: 12px 14px; border-radius: 16px; background: #f8fafc; border: 1px solid #e2e8f0; text-align: left; }
+  .self-summary h3 { margin: 0 0 8px; font-size: 15px; color: #1e3a5f; text-align: center; }
+  .self-summary ul { margin: 0; padding: 0; list-style: none; }
+  .self-summary li { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-top: 1px dashed #e2e8f0; font-size: 15px; }
+  .self-summary li:first-child { border-top: 0; }
+  .self-summary .sum-face { font-size: 22px; }
+  .self-summary .sum-q { flex: 1; font-weight: 700; }
+  .self-summary .sum-label { font-size: 12px; color: #64748b; white-space: nowrap; }
+  @media (max-width: 650px) { .self-opt { min-height: 56px; padding: 8px 10px; } .self-face { font-size: 28px; } .self-text { font-size: 15px; } }
   /* v5.5: Samsung Internet / in-app browser notice */
   .browser-notice { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; padding: 12px 16px; border-radius: 14px; background: #fff4e5; border: 2px solid #f5b454; color: #7a4300; font-size: 16px; line-height: 1.5; word-break: keep-all; }
   .reading-dialog .browser-notice { margin: 12px 0 0; font-size: 14px; }
@@ -651,6 +679,7 @@
       <img id="successMascot" class="success-character" alt="양손 엄지를 들고 활짝 웃으며 축하하는 부설이" width="1080" height="1080">
       <div id="successTitle" class="success-title" lang="en">You did a good job!</div>
       <div id="successSub" class="success-sub">You matched all the cards!</div>
+      <div id="selfSummary" class="self-summary" hidden></div>
       <button id="successClose" class="success-close" onclick="closeSuccess()">OK</button>
     </div>
   </dialog>
@@ -662,6 +691,12 @@
     <img id="feedbackArt" class="feedback-art" width="1080" height="1080" alt="">
     <h2 id="feedbackTitle" class="feedback-title" lang="en">Try again!</h2>
     <p id="feedbackDescription" class="feedback-description"></p>
+    <div id="selfCheck" class="self-check" role="group" aria-labelledby="selfCheckTitle" hidden>
+      <p id="selfCheckTitle" class="self-check-title"><span lang="en">How was your reading?</span><small>나의 읽기는 어땠나요?</small></p>
+      <button type="button" class="self-opt" data-level="3" onclick="chooseSelfCheck(3)"><span class="self-face" aria-hidden="true">😀</span><span class="self-text"><span lang="en">I can read by myself.</span><small>혼자서 읽을 수 있어요.</small></span></button>
+      <button type="button" class="self-opt" data-level="2" onclick="chooseSelfCheck(2)"><span class="self-face" aria-hidden="true">🙂</span><span class="self-text"><span lang="en">I can read with ‘Help’.</span><small>도움받기 후 읽을 수 있어요.</small></span></button>
+      <button type="button" class="self-opt" data-level="1" onclick="chooseSelfCheck(1)"><span class="self-face" aria-hidden="true">😐</span><span class="self-text"><span lang="en">I need more practice.</span><small>연습이 더 필요해요.</small></span></button>
+    </div>
     <button id="feedbackNext" class="feedback-next" onclick="closeFeedback()">다시 고르기</button>
   </div>
 </dialog>
@@ -1054,6 +1089,51 @@ function cancelReadingPopup() {
   updateVoiceUI();
   popup.focus?.focus({ preventScroll: true });
 }
+// Self-assessment: one choice per completed sentence pair.
+const SELF_LEVELS = {
+  3: { face: '😀', en: 'I can read by myself.', ko: '혼자서 읽을 수 있어요.' },
+  2: { face: '🙂', en: "I can read with 'Help'.", ko: '도움받기 후 읽을 수 있어요.' },
+  1: { face: '😐', en: 'I need more practice.', ko: '연습이 더 필요해요.' }
+};
+const selfEval = new Map();   // item id -> level
+function setupSelfCheck(on) {
+  const box = byId('selfCheck');
+  box.hidden = !on;
+  box.classList.remove('dim');
+  byId('feedbackDialog').classList.toggle('with-self', on);
+  box.querySelectorAll('.self-opt').forEach(b => { b.classList.remove('chosen'); b.setAttribute('aria-pressed', 'false'); });
+  byId('feedbackNext').disabled = on;
+}
+function chooseSelfCheck(level) {
+  if (!popup.item || byId('selfCheck').hidden) return;
+  selfEval.set(popup.item.id, level);
+  byId('selfCheck').classList.add('dim');
+  byId('selfCheck').querySelectorAll('.self-opt').forEach(b => {
+    const on = Number(b.dataset.level) === level;
+    b.classList.toggle('chosen', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  byId('feedbackNext').disabled = false;
+  byId('feedbackNext').textContent = popup.nextLabel;
+  byId('feedbackNext').focus({ preventScroll: true });
+}
+function renderSelfSummary(teacher) {
+  const box = byId('selfSummary');
+  const rows = items.filter(item => selfEval.has(item.id));
+  box.hidden = !rows.length;
+  if (box.hidden) return;
+  box.innerHTML = '<h3>나의 읽기 돌아보기</h3><ul></ul>';
+  const list = box.querySelector('ul');
+  rows.forEach(item => {
+    const level = SELF_LEVELS[selfEval.get(item.id)];
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="sum-face" aria-hidden="true"></span><span class="sum-q" lang="en"></span><span class="sum-label"></span>';
+    li.querySelector('.sum-face').textContent = level.face;
+    li.querySelector('.sum-q').textContent = item.q;
+    li.querySelector('.sum-label').textContent = level.ko;
+    list.append(li);
+  });
+}
 function showFeedback(kind) {
   popup.kind = kind;
   const content = {
@@ -1068,12 +1148,19 @@ function showFeedback(kind) {
   byId('feedbackKicker').textContent = content[2];
   byId('feedbackArt').src = mascotAssets[content[3]];
   byId('feedbackArt').alt = kind === 'perfect' ? '두근두근 기뻐하는 부설이' : kind === 'nice' ? '쌍따봉으로 축하하는 부설이' : '고민하며 다시 도전을 응원하는 부설이';
-  byId('feedbackNext').textContent = score === items.length && kind !== 'mismatch' ? '전체 완료 확인' : content[4];
-  openPopup('feedbackDialog', 'feedbackNext');
+  popup.nextLabel = score === items.length && kind !== 'mismatch' ? '전체 완료 확인' : content[4];
+  const withSelf = kind !== 'mismatch' && !!popup.item;
+  setupSelfCheck(withSelf);
+  byId('feedbackNext').textContent = withSelf ? '나의 읽기를 먼저 골라 주세요' : popup.nextLabel;
+  openPopup('feedbackDialog', withSelf ? null : 'feedbackNext');
+  if (withSelf) byId('selfCheck').querySelector('.self-opt').focus({ preventScroll: true });
   setCoach(kind === 'nice' ? 'success' : kind === 'perfect' ? 'perfect' : 'retry');
 }
 function closeFeedback() {
+  // A finished reading waits for the child's self-assessment choice.
+  if (!byId('selfCheck').hidden && popup.item && !selfEval.has(popup.item.id)) return;
   stopPlayback();
+  popup.item = null;
   const kind = popup.kind;
   popup.kind = '';
   closePopup('feedbackDialog');
@@ -1139,6 +1226,7 @@ function stopByChild() {
   byId('readBtn').focus({ preventScroll: true });
 }
 function commitReading(a, perfect) {
+  popup.item = a.item;
   markLessonComplete();
   completePair(a.item.id);
   voice.attempt = null;
@@ -1415,6 +1503,7 @@ function showAllComplete(teacher = false) {
   byId('successMascot').src = mascotAssets.nice;
   byId('successTitle').textContent = 'You did a good job!';
   byId('successSub').textContent = teacher ? '선생님 확인으로 모든 문제를 통과했어요!' : '모든 짝을 맞추고 영어도 읽었어요!';
+  renderSelfSummary(teacher);
   closePopup('readingDialog');
   closePopup('feedbackDialog');
   popup.kind = '';
@@ -2206,6 +2295,8 @@ function closeSuccess() {
 }
 
 function resetGame() {
+  selfEval.clear();
+  popup.item = null;
   stopReading();
   stopPlayback();
 
