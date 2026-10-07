@@ -3,7 +3,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Read &amp; Match Game</title>
-<meta name="app-version" content="can-you-5.8-done-stage">
+<meta name="app-version" content="can-you-5.11-quiet-status">
 <style>
   * { box-sizing: border-box; }
   body {
@@ -620,7 +620,7 @@
         <div class="prompt-header"><span></span><span id="wordProgress" class="progress-pill">0개 인식</span></div>
         <span class="word-line-label">QUESTION · 질문</span><p id="readingQuestion" class="word-line" lang="en"></p>
         <span class="word-line-label">ANSWER · 대답</span><p id="readingAnswer" class="word-line" lang="en"></p>
-        <p id="wordHint" class="word-hint">들리는 단어에 동그라미가 그려져요. 다 읽으면 ‘읽기 완료’를 눌러요.</p>
+        <p id="wordHint" class="word-hint"></p>
       </div>
     </div>
     <p id="modeHint" class="mode-hint"></p>
@@ -639,7 +639,7 @@
       </div>
     </div>
     <div class="browser-notice" data-browser-notice hidden><span><strong data-browser-name>이 브라우저</strong>에서는 영어 음성인식(단어 동그라미)이 작동하지 않을 수 있어요. <strong>Chrome</strong>에서 열어 주세요.</span><a class="open-chrome" data-open-chrome href="#">Chrome으로 열기</a></div>
-    <p id="voiceStatus" class="voice-status" role="status" aria-live="polite">문장 카드와 그림 카드의 짝을 먼저 골라 주세요.</p>
+    <p id="voiceStatus" class="voice-status" role="status" aria-live="polite"></p>
     <details id="transcriptBox" class="transcript-box" hidden>
       <summary>들린 말 확인 <small id="transcriptLabel"></small></summary>
       <p id="heardText" lang="en"></p>
@@ -668,7 +668,7 @@
     </div>
   </section>
   <div class="reading-footer">
-    <p id="decisionHint" class="decision-hint" role="status">질문과 대답을 읽어 판정 기준을 채우면 두 버튼이 열려요.</p>
+    <p id="decisionHint" class="decision-hint" role="status"></p>
     <div class="decision-actions">
       <button id="stopBtn" class="secondary" onclick="cancelReadingPopup()">취소</button>
       <button id="retryBtn" class="retry-reading" onclick="retryReading()" disabled>↻ 다시 도전</button>
@@ -889,7 +889,7 @@ function selectSentence(el, item) {
   el.setAttribute("aria-pressed", "true");
   selectedSentence = { el, item };
   resetLessonFeedback();
-  document.getElementById("voiceStatus").textContent = "Read를 눌러 질문과 대답을 읽어 보세요.";
+  document.getElementById("voiceStatus").textContent = "";
   checkMatch();
   updateVoiceUI();
 }
@@ -958,7 +958,7 @@ function checkMatch() {
     return;
   }
   resetStars();
-  setStatus('짝이 맞아요! Read를 눌러 질문과 대답을 읽어 보세요.');
+  setStatus('');
   openReadingPopup();
 }
 
@@ -999,14 +999,14 @@ function playHelp() {
   utterance.onstart = () => {
     if (helpId !== voice.helpSerial || microphoneActive()) return;
     document.getElementById("voiceStatus").textContent =
-      "Listen carefully. 원어민 영어 음성을 잘 들어 보세요.";
+      "";
   };
 
   utterance.onend = () => {
     if (helpId !== voice.helpSerial || microphoneActive()) return;
     if (score < items.length) {
       document.getElementById("voiceStatus").textContent =
-        "이제 Read를 눌러 질문과 대답을 읽어 보세요.";
+        "";
     }
   };
 
@@ -1173,11 +1173,11 @@ function updateReadingChoices() {
   hint.classList.toggle('ready', enabled);
   const perfectNow = enabled && currentReadingState().perfect;
   hint.textContent = perfectNow
-    ? '모든 단어가 동그라미에 쏙! ‘읽기 완료’를 누르면 Perfect!'
+    ? ''
     : enabled
-    ? '통과할 수 있어요! 다시 도전하거나 이대로 읽기를 완료해도 좋아요.'
+    ? ''
     : voice.phase === 'finishing' ? '마지막으로 들린 말을 확인하고 있어요…'
-    : '질문과 대답을 읽어 판정 기준을 채우면 두 버튼이 열려요.';
+    : '';
 }
 function refreshReadingEligibility(a) {
   updateVoiceUI();
@@ -1189,20 +1189,20 @@ function refreshReadingEligibility(a) {
   // No automatic finish: even a perfect reading waits for the child's ‘읽기 완료’.
 }
 function startOrRestartReading() {
-  if (voice.phase === 'review') stopReading('다시 읽어 볼까요?');
+  if (voice.phase === 'review') stopReading('');
   if (voice.phase === 'idle') startReading();
 }
 function retryReading() {
   if (!canChooseReading()) return;
   stopPlayback();
-  stopReading('처음부터 다시 읽어 볼까요?');
+  stopReading('');
   startReading();
 }
 function stopByChild() {
   // Stop: the child noticed a mistake. Clear this attempt and start over with Read.
   stopPlayback();
   if (!isBusy() && !voice.checking) return;
-  stopReading('멈췄어요. 괜찮아요! Read를 눌러 처음부터 다시 읽어 보세요.');
+  stopReading('');
   byId('transcriptBox').hidden = true;
   byId('heardText').textContent = '';
   byId('recordClock').textContent = '00:00 / 01:00';
@@ -1223,7 +1223,7 @@ async function finishReading({ intent = 'complete' } = {}) {
   setPhase('finishing');
   stopClock(a);
   setBadge('결과 확인 중');
-  setStatus('읽은 내용을 확인하고 있어요. 잠깐만 기다려 주세요.');
+  setStatus('');
   // The child pressed 읽기 완료 while the circles already pass: judge exactly
   // what the child saw on screen (interim words included) and finish now.
   const seen = currentReadingState(a, false);
@@ -1265,7 +1265,7 @@ async function finishReading({ intent = 'complete' } = {}) {
     setStatus(a.error === 'result-timeout' ? '인식 결과를 기다리다 멈췄어요. 인터넷을 확인하고 Read로 다시 시작해 주세요. 별점은 그대로예요.' : errorMessage(a.error, 'recognition'));
   } else if (result.ok) {
     setCoach('qualified');
-    setStatus('통과할 만큼 들렸어요! ‘다시 도전’하거나 ‘읽기 완료’를 눌러 주세요.');
+    setStatus('');
   } else {
     setCoach('retry');
     const grade = evaluateReading(finalSpeech, a.item);
@@ -1403,8 +1403,8 @@ function updateWordMatches(text, finalText = text, review = false) {
     node.setAttribute('aria-label', node.querySelector('.word-text').textContent + (hit ? ' · 들렸어요' : ' · 기다리는 중'));
   });
   byId('wordProgress').textContent = `${matched.size} / ${wordGame.tokens.length}개 쏙!`;
-  byId('wordHint').textContent = review ? '빈 동그라미의 단어를 한 번 더 읽어 볼까요? 별은 그대로예요.'
-    : '들리는 단어에 동그라미가 그려져요. 다 읽으면 ‘읽기 완료’를 눌러요.';
+  byId('wordHint').textContent = review ? ''
+    : '';
 }
 function resetLessonFeedback() {
   stopPlayback();
@@ -1422,11 +1422,11 @@ function chooseEnglishVoice() {
 function setCoach(mood, spokenLine = '') {
   const copy = {
     ready: ["Let's Read!", '', "Let's go!", 'READ & SMILE'],
-    listening: ['Your turn!', '천천히 읽어요. 우리가 듣고 있어요!', 'Go, go!', 'YOU CAN DO IT'],
-    qualified: ['Nice!', '잘했어요! 다시 도전하거나 이대로 완료해도 좋아요.', 'Nice!', 'GREAT JOB'],
-    perfect: ['Perfect!', '모든 단어가 동그라미에 쏙! 완벽해요!', 'Perfect!', 'ALL WORDS'],
+    listening: ['Your turn!', '', 'Go, go!', 'YOU CAN DO IT'],
+    qualified: ['Nice!', '', 'Nice!', 'GREAT JOB'],
+    perfect: ['Perfect!', '', 'Perfect!', 'ALL WORDS'],
     success: ['Nice!', '잘했어요! 다음 짝도 도전해 봐요.', 'Nice!', 'GREAT JOB'],
-    retry: ['Try again!', '괜찮아요! 한 번 더 읽어 볼까요?', 'Try again!', 'YOU CAN DO IT'],
+    retry: ['Try again!', '', 'Try again!', 'YOU CAN DO IT'],
     teacher: ['You did a good job!', '선생님 확인으로 모든 문제를 완료했어요!', 'Good job!', 'ALL CLEAR']
   }[mood];
   const coach = byId('coach');
@@ -1480,12 +1480,12 @@ function markLessonComplete(teacher = false) {
   wordGame.teacher = teacher;
   // A lenient pass does not pretend that unheard words were recognized.
   byId('wordProgress').textContent = teacher ? '선생님 확인 · 완료' : byId('wordProgress').textContent + ' · 통과!';
-  byId('wordHint').textContent = teacher ? '선생님 확인으로 완료했어요.' : '충분히 잘 읽었어요! 빈 동그라미가 있어도 통과할 수 있어요.';
+  byId('wordHint').textContent = teacher ? '선생님 확인으로 완료했어요.' : '';
 }
 function showAllComplete(teacher = false) {
   byId('successMascot').src = mascotAssets.nice;
   byId('successTitle').textContent = 'You did a good job!';
-  byId('successSub').textContent = teacher ? '선생님 확인으로 모든 문제를 통과했어요!' : '';
+  byId('successSub').textContent = '';
   setupSelfCheck();
   closePopup('readingDialog');
   closePopup('feedbackDialog');
@@ -1872,7 +1872,7 @@ function beginListening(a) {
   setPhase('listening');
   setCoach('listening');
   setBadge('읽으세요!', 'live');
-  setStatus('읽으세요! 질문과 대답을 천천히 읽고, 끝나면 ‘읽기 완료’를 눌러 주세요. 실수하면 Stop!');
+  setStatus('');
   function clock() {
     const sec = Math.min(60, Math.floor((performance.now() - a.started) / 1000));
     byId('recordClock').textContent = `00:${String(sec).padStart(2, '0')} / 01:00`;
@@ -2020,7 +2020,7 @@ function startRecognizer(a, track = null) {
     parkMicrophone();
     setPhase('review');
     refreshReadingEligibility(a);
-    setStatus(currentReadingState(a).ok ? 'Nice! 다시 도전하거나 읽기를 완료할 수 있어요.' : '듣기를 마쳤어요. Read를 눌러 다시 읽어 볼까요?');
+    setStatus(currentReadingState(a).ok ? '' : '');
     if (currentReadingState(a).ok) setCoach('qualified');
     // Resuming is bounded by MAX_RESUMES and the one-minute limit, so it never loops forever.
   };
@@ -2050,7 +2050,7 @@ async function startReading() {
   voice.attempt = a;
   setPhase('preparing');
   setBadge('마이크 준비 중');
-  setStatus('마이크를 준비하고 있어요. 권한 창이 뜨면 허용하고, ‘읽으세요’ 표시를 기다려 주세요.');
+  setStatus('');
   a.prepareTimer = setTimeout(() => {
     if (isCurrent(a) && voice.phase === 'preparing') failAttempt(a, errorMessage('PrepareTimeout'));
   }, PREPARE_MS);
@@ -2100,7 +2100,7 @@ async function waitForRecognition(a) {
     catch { a.error = 'stopping-failed'; a.resolveRecognition(); }
   });
 }
-function stopReading(message = '취소했어요. 별점은 그대로예요. 다시 시작하려면 Read를 눌러 주세요.') {
+function stopReading(message = '') {
   voice.serial++;
   voice.checking = false;
   const a = voice.attempt;
@@ -2260,14 +2260,14 @@ function completePair(itemId) {
   document.getElementById("score").textContent = score;
   const earnedStars = currentStars;
   document.getElementById("voiceStatus").textContent =
-    `Good job! ★ ${earnedStars}/3  다음 짝을 골라 보세요.`;
+    '';
 
   selectedSentence = null;
   selectedPicture = null;
 
   if (score === items.length) {
     releaseMicrophone();
-    document.getElementById("voiceStatus").textContent = "Great job! 모든 문장을 읽었어요.";
+    document.getElementById("voiceStatus").textContent = "";
   }
 }
 
@@ -2309,7 +2309,7 @@ function resetGame() {
 
   resetStars();
   document.getElementById("voiceStatus").textContent =
-    "문장 카드를 고른 뒤 Read를 눌러 읽어 보세요.";
+    "";
   render();
   updateVoiceUI();
 }
