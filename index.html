@@ -3,7 +3,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Read &amp; Match Game</title>
-<meta name="app-version" content="can-you-5.11-quiet-status">
+<meta name="app-version" content="can-you-5.12-self-check-v2">
 <style>
   * { box-sizing: border-box; }
   body {
@@ -684,9 +684,9 @@
       <div id="successSub" class="success-sub">You matched all the cards!</div>
       <div id="selfCheck" class="self-check" role="group" aria-labelledby="selfCheckTitle" hidden>
         <p id="selfCheckTitle" class="self-check-title"><span lang="en">How was your reading?</span><small>(읽기는 어땠나요?)</small></p>
-        <button type="button" class="self-opt" data-level="3" onclick="chooseSelfCheck(3)"><span class="self-face" aria-hidden="true">😀</span><span class="self-text"><span lang="en">I can read by myself.</span></span></button>
-        <button type="button" class="self-opt" data-level="2" onclick="chooseSelfCheck(2)"><span class="self-face" aria-hidden="true">🙂</span><span class="self-text"><span lang="en">I can read with ‘Help’.</span></span></button>
-        <button type="button" class="self-opt" data-level="1" onclick="chooseSelfCheck(1)"><span class="self-face" aria-hidden="true">😐</span><span class="self-text"><span lang="en">I need more practice.</span></span></button>
+        <button type="button" class="self-opt" data-level="3" onclick="chooseSelfCheck(3)"><span class="self-face" aria-hidden="true">😀</span><span class="self-text"><span lang="en">I can read aloud correctly.</span></span></button>
+        <button type="button" class="self-opt" data-level="2" onclick="chooseSelfCheck(2)"><span class="self-face" aria-hidden="true">🙂</span><span class="self-text"><span lang="en">I can read aloud with a few mistakes.</span></span></button>
+        <button type="button" class="self-opt" data-level="1" onclick="chooseSelfCheck(1)"><span class="self-face" aria-hidden="true">😐</span><span class="self-text"><span lang="en">I can read some words aloud with help.</span></span></button>
       </div>
       <p id="selfThanks" class="self-thanks" role="status" aria-live="polite"></p>
       <button id="successClose" class="success-close" onclick="closeSuccess()">OK</button>
@@ -807,6 +807,15 @@ function shuffle(arr) {
   }
   return out;
 }
+// Each restart must look different: reshuffle until the order differs from the last one shown.
+const lastOrder = {};
+function shuffleFresh(arr, key) {
+  let out = shuffle(arr);
+  const sig = list => list.map(it => it.id).join(',');
+  for (let n = 0; arr.length > 1 && lastOrder[key] && sig(out) === lastOrder[key] && n < 50; n++) out = shuffle(arr);
+  lastOrder[key] = sig(out);
+  return out;
+}
 
 
 function highlightTarget(text) {
@@ -838,7 +847,7 @@ function render() {
   sWrap.innerHTML = "";
   pWrap.innerHTML = "";
 
-  shuffle(items).forEach(item => {
+  shuffleFresh(items, 'sentence').forEach(item => {
     const el = document.createElement("div");
     el.className = "card";
     el.dataset.id = item.id;
@@ -855,7 +864,7 @@ function render() {
     sWrap.appendChild(el);
   });
 
-  shuffle(items).forEach(item => {
+  shuffleFresh(items, 'picture').forEach(item => {
     const el = document.createElement("div");
     el.className = "card picture-card";
     el.dataset.id = item.id;
@@ -1096,9 +1105,9 @@ function cancelReadingPopup() {
 // Self-assessment: once, after ALL sentences are finished (also after a
 // teacher's 관리자모드 pass). OK opens only after the child picks one.
 const SELF_LEVELS = {
-  3: { face: '😀', en: 'I can read by myself.', ko: '혼자서 읽을 수 있어요.' },
-  2: { face: '🙂', en: "I can read with 'Help'.", ko: '도움받기 후 읽을 수 있어요.' },
-  1: { face: '😐', en: 'I need more practice.', ko: '연습이 더 필요해요.' }
+  3: { face: '😀', en: 'I can read aloud correctly.', ko: '혼자서 읽을 수 있어요.' },
+  2: { face: '🙂', en: 'I can read aloud with a few mistakes.', ko: '도움받기 후 읽을 수 있어요.' },
+  1: { face: '😐', en: 'I can read some words aloud with help.', ko: '연습이 더 필요해요.' }
 };
 let selfLevel = 0;
 function setupSelfCheck() {
@@ -1422,7 +1431,7 @@ function chooseEnglishVoice() {
 function setCoach(mood, spokenLine = '') {
   const copy = {
     ready: ["Let's Read!", '', "Let's go!", 'READ & SMILE'],
-    listening: ['Your turn!', '', 'Go, go!', 'YOU CAN DO IT'],
+    listening: ['You can do it!', '', 'Go, go!', 'YOU CAN DO IT'],
     qualified: ['Nice!', '', 'Nice!', 'GREAT JOB'],
     perfect: ['Perfect!', '', 'Perfect!', 'ALL WORDS'],
     success: ['Nice!', '잘했어요! 다음 짝도 도전해 봐요.', 'Nice!', 'GREAT JOB'],
